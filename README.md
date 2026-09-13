@@ -22,3 +22,15 @@ La proyección 3D tiene cámara fija. No hay análisis de fase estéreo, acordes
 ## Verificación
 
 Build de producción correcto. Detector comprobado con senos de 55, 110, 220, 440, 880 y 1300 Hz a 44.1/48 kHz (error inferior a 5 cents), y silencio. En navegador: señal 440 Hz → A4, archivo WAV 220 Hz → A3, cambio de referencia a 432 Hz → +31.8 cents, parada y fin de archivo. Sin errores de consola observados. Micrófono físico pendiente de prueba del usuario.
+
+## macOS · versión 0.2
+
+Instalador para Apple Silicon (arm64): abrir el DMG y arrastrar BlackMamba Music Engine a Applications. Es un build de desarrollo sin firma Developer ID ni notarización de Apple; macOS puede mostrar una advertencia al abrirlo. No requiere Node ni un servidor web para funcionar.
+
+El selector **Tema** guarda Plata, Oscuro, Morado degradado u Océano. El botón **Diseño de referencia** muestra la captura original incluida dentro del programa. El icono también está integrado.
+
+Para reconstruir: `npm ci` y `npm run dist:mac`. El instalador queda en `release/`. El empaquetado de escritorio se encuentra en `electron/main.cjs` y la configuración de `electron-builder` en `package.json`.
+
+## Skill reutilizable
+
+`skills/blackmamba-interfaces/SKILL.md` contiene el flujo de diseño, tokens de los cuatro temas, icono, captura de referencia y guía de DMG. Copiar esa carpeta a `$CODEX_HOME/skills/blackmamba-interfaces` permite descubrirlo en Codex. Invocación: `$blackmamba-interfaces crea un analizador con paneles científicos y tema morado degradado`.

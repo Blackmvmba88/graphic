@@ -1,19 +1,73 @@
 {
   "name": "blackmamba-engine",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
-    "test:sites": "node --test tests/sites-worker.test.mjs"
+    "test:sites": "node --test tests/sites-worker.test.mjs",
+    "desktop": "npm run build && electron .",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --publish never"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",
-    "vite": "6.4.2",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "vite": "6.4.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "description": "BlackMamba Music Engine \u00b7 analizador de audio",
+  "author": "BlackMamba RECORDS",
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.blackmambarecords.musicengine",
+    "productName": "BlackMamba Music Engine",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/client/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.music",
+      "icon": "build/icon.icns",
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "BlackMamba analiza el audio del micr\u00f3fono para mostrar frecuencia, nota y espectro en tiempo real."
+      }
+    },
+    "dmg": {
+      "title": "BlackMamba Music Engine",
+      "artifactName": "BlackMamba-Music-Engine-${version}-${arch}.${ext}",
+      "contents": [
+        {
+          "x": 150,
+          "y": 180,
+          "type": "file"
+        },
+        {
+          "x": 430,
+          "y": 180,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
 }

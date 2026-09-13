@@ -1,0 +1,4 @@
+interface:
+  display_name: "BlackMamba Interfaces"
+  short_description: "Paneles científicos con temas y visualización de datos"
+  default_prompt: "Usa $blackmamba-interfaces para crear una interfaz de instrumento con paneles de datos y temas plata, oscuro y morado degradado."
