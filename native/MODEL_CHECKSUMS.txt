@@ -1,0 +1,2 @@
+60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe  native/whisper/ggml-base.bin
+807d244b58a30eaa89f0a721fb841619c696857aabe4eac93769bd0b61497f61  native/audioset/onnx/model_quantized.onnx

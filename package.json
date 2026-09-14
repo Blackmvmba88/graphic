@@ -1,6 +1,6 @@
 {
   "name": "blackmamba-engine",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --publish never"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@vitejs/plugin-react": "5.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -49,7 +50,7 @@
       "icon": "build/icon.icns",
       "identity": null,
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "BlackMamba analiza el audio del micr\u00f3fono para mostrar frecuencia, nota y espectro en tiempo real."
+        "NSMicrophoneUsageDescription": "BlackMamba escucha el micr\u00f3fono para mostrar visuales, transcribir voz en espa\u00f1ol e ingl\u00e9s y sugerir etiquetas de sonidos, todo en este Mac."
       }
     },
     "dmg": {
@@ -68,6 +69,19 @@
           "path": "/Applications"
         }
       ]
-    }
+    },
+    "extraResources": [
+      {
+        "from": "native/whisper",
+        "to": "whisper"
+      },
+      {
+        "from": "native/audioset",
+        "to": "audioset"
+      }
+    ],
+    "asarUnpack": [
+      "node_modules/onnxruntime-node/**"
+    ]
   }
 }

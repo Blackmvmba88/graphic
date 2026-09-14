@@ -1,0 +1,14 @@
+/* One inherited phase keeps the whole instrument in the same color cycle. */
+@property --system-phase{syntax:'<angle>';inherits:true;initial-value:0deg}
+:root{--cycle-strength:9%;--cycle-color:hsl(calc(265deg + var(--system-phase)) 65% 58%);animation:system-color-cycle 48s linear infinite}
+:root[data-theme=dark]{--cycle-strength:14%}
+:root[data-theme=purple]{--cycle-strength:30%}
+:root[data-theme=ocean]{--cycle-strength:24%;--cycle-color:hsl(calc(185deg + var(--system-phase)) 65% 52%)}
+.app{background-image:radial-gradient(ellipse at 10% 10%,color-mix(in srgb,var(--cycle-color) var(--cycle-strength),transparent),transparent 65%),radial-gradient(ellipse at 95% 95%,color-mix(in srgb,var(--cycle-color) var(--cycle-strength),transparent),transparent 70%),var(--shell-layer,linear-gradient(var(--shell),var(--shell)))}
+:root[data-theme=purple]{--shell-layer:linear-gradient(135deg,#131027,#291444 48%,#461955)}
+:root[data-theme=ocean]{--shell-layer:linear-gradient(130deg,#091c2c,#123b4e 60%,#14504f)}
+.panel,.input-badge{background-color:color-mix(in srgb,var(--panel),var(--cycle-color) 7%);border-color:color-mix(in srgb,var(--line),var(--cycle-color) 24%)}
+.surface{background-image:radial-gradient(ellipse at 70% 20%,color-mix(in srgb,var(--cycle-color) 18%,transparent),transparent 80%)}
+button.primary,.selected{background:color-mix(in srgb,var(--accent),var(--cycle-color) 35%);border-color:color-mix(in srgb,var(--accent),var(--cycle-color) 35%)}
+@keyframes system-color-cycle{to{--system-phase:360deg}}
+@media(prefers-reduced-motion:reduce){:root{animation:none}}

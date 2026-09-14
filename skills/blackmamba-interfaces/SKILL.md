@@ -23,6 +23,10 @@ Convierte una referencia visual en un instrumento utilizable. El patrón de refe
 - Si el usuario pide incluir la captura en el programa, empaquétala como archivo local y muéstrala en una vista de referencia con cierre y navegación por teclado. No la presentes como medición en vivo.
 - Para un icono nuevo, usa la referencia como material visual y la herramienta de imagen disponible; guarda el resultado dentro del proyecto. Para marca BlackMamba ya aprobada se puede reutilizar [app-icon.png](assets/app-icon.png).
 
+## Movimiento integrado
+
+Cuando se pidan temas vivos, usa una sola fase cromática heredada para coordinar fondos, bordes y acentos. Anima lentamente y en bucle continuo; conserva el contraste y los colores semánticos de los gráficos. Respeta `prefers-reduced-motion`. Usa [color-cycle.css](assets/color-cycle.css) como ejemplo opcional adaptando los selectores al producto. En escritorio distribuye la altura con flex/grid y `min-height:0`; conserva desplazamiento en ventanas pequeñas o ampliadas.
+
 ## Validación y entrega
 
 Prueba la acción principal con una entrada conocida, el estado de fin o parada y el cambio de tema tras recargar. Inspecciona las vistas renderizadas en temas claros y oscuros, el diálogo y una anchura pequeña. Informa por separado qué se verificó y qué requiere hardware/permisos del usuario.

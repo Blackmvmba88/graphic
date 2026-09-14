@@ -12,3 +12,6 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Aplicación macOS distribuida como DMG, además de versión web.
 - Conservar temas Plata, Oscuro, Morado degradado y Océano; selección persistente.
 - Usar el icono espectral multicolor aprobado en public/app-icon.png.
+- Prioridad actual: detectar y escribir palabras en inglés y español. La mejora de fidelidad visual con micrófono activo está pendiente en ROADMAP.md (panel de entrada y superficie espectral); no declararla terminada con la vista actual.
+- Pantalla completa: repartir espacio para ver diseño completo a zoom normal. Conservar zoom nativo ⌘ + / ⌘ −; usar desplazamiento en vistas pequeñas o ampliadas en lugar de ocultar controles.
+- Los temas deben tener un degradado vivo con un ciclo de color compartido por fondo, paneles y acentos. Mantener contraste, respetar reducir movimiento y no alterar la semántica cromática de los datos.
