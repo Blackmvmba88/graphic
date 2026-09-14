@@ -9,13 +9,14 @@ import { SinusoidalComponents } from './SinusoidalComponents';
 import { MusicalScalePanel } from './MusicalScalePanel';
 import { AudioIntelligenceEngine } from './intelligence';
 import { IntelligencePanel } from './IntelligencePanel';
+import { KaraokeStage } from './KaraokeStage';
 
 const engine = new AudioEngine();
 const intelEngine = new AudioIntelligenceEngine();
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
 const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
 const time = s => `${Math.floor((s || 0) / 60)}:${String(Math.floor((s || 0) % 60)).padStart(2, '0')}`;
-const themes = ['silver', 'dark', 'purple', 'ocean'];
+const themes = ['silver', 'dark', 'purple', 'ocean', 'princess'];
 function savedTheme() { try { const t = localStorage.getItem('blackmamba-theme'); return themes.includes(t) ? t : 'silver'; } catch { return 'silver'; } }
 
 export function App() {
@@ -238,6 +239,14 @@ export function App() {
     {
       id: 'intelligence', title: 'Capa de Inteligencia Acústica',
       content: <IntelligencePanel intelligenceEngine={intelEngine} sampleData={data} />
+    },
+    {
+      id: 'speech', title: 'Palabras en Vivo (Whisper Local)',
+      content: <SpeechPanel engine={engine} active={!!(data || engine.stream)} />
+    },
+    {
+      id: 'karaoke', title: 'Karaoke & Vocal Stage',
+      content: <KaraokeStage engine={engine} data={data} note={note} theme={theme} />
     }
   ];
 
@@ -271,7 +280,7 @@ export function App() {
       {/* Navigation Pills Bar */}
       <nav className="nav-mock">
         <div className="nav-tabs">
-          {['Live', 'Analysis', 'Harmonics', 'Tuning', 'Spectral', 'Settings'].map(tab => (
+          {['Live', 'Karaoke', 'Analysis', 'Harmonics', 'Tuning', 'Spectral', 'Settings'].map(tab => (
             <button
               key={tab}
               className={`tab-pill ${activeTab === tab ? 'active' : ''}`}
@@ -308,6 +317,7 @@ export function App() {
               <option value="dark">Oscuro</option>
               <option value="purple">Morado degradado</option>
               <option value="ocean">Océano</option>
+              <option value="princess">👑 Modo Princesa</option>
             </select>
           </label>
         </div>
@@ -347,8 +357,12 @@ export function App() {
 
       {error && <div role="alert" className="error">{error}<button onClick={() => setError('')}>Cerrar</button></div>}
 
-      {/* Module Board Workspace */}
-      <ModuleBoard modules={modules} />
+      {/* Module Board Workspace or Karaoke Stage */}
+      {activeTab === 'Karaoke' ? (
+        <KaraokeStage engine={engine} data={data} note={note} theme={theme} />
+      ) : (
+        <ModuleBoard modules={modules} />
+      )}
 
       <dialog className="reference-dialog" ref={designDialog}>
         <div className="dialog-header">

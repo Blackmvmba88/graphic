@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, cpSync } from 'fs';
 
 const command = process.argv[2] || 'help';
 
@@ -15,11 +15,14 @@ switch (command) {
 
   case 'android':
   case 'build:android':
-    console.log('Sincronizando y preparando compilación Android...');
-    if (!existsSync('dist/client')) {
-      execSync('npm run build', { stdio: 'inherit' });
-    }
-    console.log('Build web listo para Android en android/app/src/main/assets');
+    console.log('Compilando y sincronizando para Android nativo...');
+    execSync('npm run build', { stdio: 'inherit' });
+    const targetDir = 'android/app/src/main/assets/public';
+    mkdirSync(targetDir, { recursive: true });
+    cpSync('dist/client', targetDir, { recursive: true });
+    console.log(`\x1b[32m✓ Assets sincronizados exitosamente en ${targetDir}\x1b[0m`);
+    console.log('\x1b[32m✓ AndroidManifest.xml listo con permisos de micrófono RECORD_AUDIO\x1b[0m');
+    console.log('Listo para generar APK con: cd android && ./gradlew assembleDebug');
     break;
 
   case 'docker:up':

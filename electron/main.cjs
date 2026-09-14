@@ -26,6 +26,7 @@ app.whenReady().then(() => {
   ipcMain.handle('app:update',e=>{trusted(e);return installUpdate(window);});
   ipcMain.handle('speech:status',e=>{trusted(e);return speech.status();});
   ipcMain.handle('speech:transcribe',(e,wav,language)=>{trusted(e);return speech.transcribe(wav,language);});
+  ipcMain.handle('speech:transcribeSong',(e,wav,language)=>{trusted(e);return speech.transcribeSong(wav,language);});
   ipcMain.handle('speech:cancel',e=>{trusted(e);speech.cancel();sounds.close();});
   ipcMain.handle('sounds:classify',(e,wav)=>{trusted(e);if(!(wav instanceof ArrayBuffer)||wav.byteLength<44||wav.byteLength>480044)throw new Error('Audio inválido');return sounds.classify(wav);});
   session.defaultSession.setPermissionCheckHandler((contents, permission, origin, details) =>

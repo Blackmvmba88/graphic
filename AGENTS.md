@@ -10,10 +10,11 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 ## Preferencias del producto
 - Aplicación macOS distribuida como DMG, además de versión web.
-- Conservar temas Plata, Oscuro, Morado degradado y Océano; selección persistente.
+- Conservar temas Plata, Oscuro, Morado degradado, Océano y Modo Princesa (paleta rosa, pastel neón, oro y glitter); selección persistente.
 - Usar el icono espectral multicolor aprobado en public/app-icon.png.
 - Prioridad actual: detectar y escribir palabras en inglés y español. La mejora de fidelidad visual con micrófono activo está pendiente en ROADMAP.md (panel de entrada y superficie espectral); no declararla terminada con la vista actual.
 - Pantalla completa: repartir espacio para ver diseño completo a zoom normal. Conservar zoom nativo ⌘ + / ⌘ −; usar desplazamiento en vistas pequeñas o ampliadas en lugar de ocultar controles.
 - Los temas deben tener un degradado vivo con un ciclo de color compartido por fondo, paneles y acentos. Mantener contraste, respetar reducir movimiento y no alterar la semántica cromática de los datos.
 - Laboratorio modular: paneles movibles, redimensionables, ocultables y ampliables, con distribución persistente. Cámara 3D, grosor y color configurables; transporte y lista de archivos reales. Mantener el análisis como fundamento previo a creación musical.
 - Snapshot guardado y preservado en Git: Etiqueta `v0.4.0`, tag de UI `v0.2-ui-snapshot` y rama de respaldo `backup/v0.2-music-engine`. Captura de referencia guardada en `docs/snapshots/v0.2-ui-reference.png`.
+- Modo Karaoke & Escenario Vocal: integración de piano-roll interactivo a 60 FPS con orbe vocal y partículas, teleprompter de letras con iluminación dinámica palabra por palabra, traducción simultánea en vivo (Español ⇄ Inglés) y sistema de puntuación/racha accesible mediante la pestaña `Karaoke`.

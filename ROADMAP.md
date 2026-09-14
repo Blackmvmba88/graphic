@@ -11,6 +11,7 @@
 - [x] **📱 Soporte Android Nativo**: Estructura de proyecto Gradle en `android/`, `AndroidManifest.xml` con permisos de micrófono `RECORD_AUDIO` y `capacitor.config.json`.
 - [x] **🐳 Dockerización**: `Dockerfile` multi-stage y `docker-compose.yml`.
 - [x] **⚡ Metacomandos CLI & API.md**: Runner `npm run meta` y documentación API detallada.
+- [x] **🎤 Modo Karaoke & Vocal Stage**: Piano-roll interactivo a 60 FPS con orbe vocal y partículas, teleprompter de letras con iluminación en tiempo real, traducción simultánea bilingüe (ES ⇄ EN) y sistema de puntuación.
 
 ## Próximos Pasos · v0.5
 

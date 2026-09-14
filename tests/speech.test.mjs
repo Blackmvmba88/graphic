@@ -17,3 +17,10 @@ import {AudioEngine} from '../src/audio.js';
 test('turning off microphone preserves file playback',()=>{const e=new AudioEngine();let micStopped=false,fileStopped=false;e.ctx={currentTime:0};e.mix={gain:{setValueAtTime(){}}};e.stream={getTracks:()=>[{stop:()=>{micStopped=true}}]};e.micSource={disconnect(){}};e.fileSource={stop(){fileStopped=true}};e.fileName='song.wav';e.stopMicrophone();assert.equal(micStopped,true);assert.equal(fileStopped,false);assert.ok(e.fileSource);assert.equal(e.active,true);assert.equal(e.kind,'song.wav');});
 test('turning off file preserves microphone',()=>{const e=new AudioEngine();e.ctx={currentTime:0};e.mix={gain:{setValueAtTime(){}}};e.stream={getTracks:()=>[]};e.fileSource={disconnect(){},stop(){}};e.stopFile();assert.ok(e.stream);assert.equal(e.active,true);assert.equal(e.kind,'Micrófono');});
 test('initial microphone request does not stop an existing file',async()=>{const e=new AudioEngine();let stopped=false;e.fileSource={stop(){stopped=true}};e.fileName='playing.wav';e.ctx={currentTime:0,createAnalyser:()=>({}),createMediaStreamSource:()=>({connect(){}})};e.mix={gain:{setValueAtTime(){}}};e.init=async()=>{};const previous=Object.getOwnPropertyDescriptor(globalThis,'navigator');Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[]})}}});try{await e.microphone();assert.equal(stopped,false);assert.ok(e.fileSource);assert.ok(e.stream);assert.match(e.kind,/playing.wav/);}finally{if(previous)Object.defineProperty(globalThis,'navigator',previous);else delete globalThis.navigator;}});
+
+import {translateText} from '../src/liveSpeech.js';
+test('translateText converts known phrases between Spanish and English',()=>{
+  assert.equal(translateText('el sonido se convierte en conocimiento'), 'Sound becomes knowledge');
+  assert.equal(translateText('sound becomes knowledge'), 'El sonido se convierte en conocimiento');
+  assert.equal(translateText('la musica es vida'), 'The music is life');
+});
