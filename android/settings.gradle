@@ -1,0 +1,2 @@
+rootProject.name = "BlackMamba Music Engine"
+include ':app'

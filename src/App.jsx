@@ -1,16 +1,368 @@
-import React,{useEffect,useRef,useState} from 'react';
-import {AudioEngine,noteFor} from './audio';
-import {SpeechPanel} from './SpeechPanel';
-const engine=new AudioEngine();
-const themes=['silver','dark','purple','ocean'];
-function savedTheme(){try {const value=localStorage.getItem('blackmamba-theme');return themes.includes(value)?value:'purple';}catch{return 'purple';}}
-function Plot({type,tick}){const ref=useRef();useEffect(()=>{const canvas=ref.current;const w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*devicePixelRatio;canvas.height=h*devicePixelRatio;const c=canvas.getContext('2d');c.scale(devicePixelRatio,devicePixelRatio);c.clearRect(0,0,w,h);const palette=getComputedStyle(document.documentElement);const ink=palette.getPropertyValue('--plot-label').trim()||'#718095';const trace=palette.getPropertyValue('--trace').trim()||'#1775ff';c.strokeStyle=palette.getPropertyValue('--grid').trim()||'#bac2cd66';c.lineWidth=1;for(let x=0;x<w;x+=w/12){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}for(let y=0;y<h;y+=h/6){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}const color=t=>`hsl(${260-t*260},95%,52%)`;const path=(points,col=trace)=>{c.strokeStyle=col;c.lineWidth=1.5;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};if(!engine.active){c.fillStyle=ink;c.font='12px system-ui';c.textAlign='center';c.fillText('Esperando señal de audio',w/2,h/2);return;}
-if(type==='wave')path(Array.from({length:Math.floor(w)},(_,i)=>[i,h/2+engine.wave[i*4%8192]*h*.44]));
-if(type==='fft'){const b=engine.history.at(-1)||[];b.forEach((v,i)=>{const z=Math.max(0,(v+100)/100);c.fillStyle=color(1-i/b.length);c.fillRect(i*w/b.length,h-z*h,w/b.length-1,z*h);});}
-if(type==='spectrogram'){engine.history.forEach((row,x)=>row.forEach((v,y)=>{c.fillStyle=color(Math.max(0,(v+100)/100));c.fillRect(x*w/65,h-(y+1)*h/72,w/65+1,h/72+1);}));}
-if(type==='pitch'){let segment=[];for(let i=0;i<engine.pitchHistory.length;i++){const f=engine.pitchHistory[i];if(f){segment.push([i*w/160,h-(Math.log2(f/55)/5)*h]);}else{path(segment);segment=[];}}path(segment);}
-if(type==='harmonics'){const hz=engine.pitchHistory.at(-1);if(hz)for(let i=1;i<=12;i++){const k=Math.round(hz*i*8192/engine.ctx.sampleRate);const v=Math.max(-100,engine.freq[k]??-100);const x=i*w/13,y=h-(v+100)/100*h;path([[x,h],[x,y]],color(1-i/13));c.fillStyle=color(1-i/13);c.beginPath();c.arc(x,y,3,0,7);c.fill();}}
-if(type==='surface'){c.clearRect(0,0,w,h);const rows=engine.history;const project=(x,y,z)=>[w*.16+x*w*.65+y*w*.23,h*.80-y*h*.42+x*h*.14-z*h*.44];for(let j=rows.length-1;j>=0;j--){const y=j/65;for(let i=0;i<71;i++){const z=Math.max(0,(rows[j][i]+100)/100),z2=Math.max(0,(rows[j][i+1]+100)/100);path([project(i/71,y,z),project((i+1)/71,y,z2)],color((z+z2)/2));}}c.fillStyle=ink;c.font='12px system-ui';c.fillText('30 Hz',w*.13,h*.88);c.fillText('20 kHz',w*.80,h*.97);c.fillText('Frecuencia →',w*.46,h*.96);c.fillText('Tiempo · últimas muestras',w*.58,h*.20);}
-},[tick,type]);return <canvas ref={ref} aria-label={{wave:'Forma de onda',fft:'Espectro de frecuencias',surface:'Historial espectral tridimensional',pitch:'Historial de tono',harmonics:'Amplitud en múltiplos de la fundamental',spectrogram:'Espectrograma'}[type]}/>;}
-function Panel({title,meta,children,className=''}){return <section className={'panel '+className}><div className="panel-title"><h2>{title}</h2><span>{meta}</span></div>{children}</section>}
-export function App(){const [theme,setTheme]=useState(savedTheme);const [autoMic,setAutoMic]=useState(()=>{try{return localStorage.getItem('blackmamba-auto-mic')!=='false'}catch{return true}});useEffect(()=>{document.documentElement.dataset.theme=theme;try{localStorage.setItem('blackmamba-theme',theme)}catch{}},[theme]);const [tick,setTick]=useState(0),[data,setData]=useState(null),[status,setStatus]=useState('Listo para analizar'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState(440);const input=useRef();const designDialog=useRef();useEffect(()=>{const timer=setInterval(()=>{setData(engine.sample());setTick(t=>t+1)},75);return()=>{clearInterval(timer);engine.stop();}},[]);const run=async(fn)=>{setBusy(true);setError('');try{await fn();setStatus(engine.kind)}catch(e){setStatus(engine.active?engine.kind:'Sin señal');setError(e.name==='NotAllowedError'?'Permite el micrófono en Ajustes del Sistema → Privacidad y seguridad → Micrófono. Después pulsa Activar micrófono.':'No se pudo abrir el audio. Prueba un archivo WAV o MP3 válido.')}finally{setBusy(false)}};const stop=()=>{engine.stop();setData(null);setStatus('Análisis detenido')};useEffect(()=>{if(!window.blackmambaSpeech||!autoMic)return;const timer=setTimeout(()=>run(()=>engine.microphone()),100);return()=>clearTimeout(timer);},[autoMic]);const note=noteFor(data?.hz,reference);return <main className="app"><header><div className="brand"><img className="app-icon" src="./app-icon.png" alt=""/><div><div className="eyebrow">BLACKMAMBA RECORDS / AUDIO LAB</div><h1>BlackMamba <span>Music Engine</span></h1><p>Iyari Gomez / El sonido se convierte en conocimiento</p></div></div><div className="input-badge"><i className={data?'on':''}/><div><strong>{data?'Entrada activa':'Motor de análisis'}</strong><small>{data?`${data.rate/1000} kHz · FFT 8192 · En vivo`:'Audio local · Sin subir archivos'}</small></div></div></header><nav><div className="tabs"><span className="selected">Análisis en vivo</span><span className="version">V 0.3</span>{window.blackmambaSpeech&&<button className="reference-link" onClick={()=>window.blackmambaSpeech.update()}>Actualizar</button>}</div><div className="actions"><label className="theme-control">Tema <select aria-label="Tema visual" value={theme} onChange={e=>setTheme(e.target.value)}><option value="silver">Plata</option><option value="dark">Oscuro</option><option value="purple">Morado degradado</option><option value="ocean">Océano</option></select></label><button disabled={busy} onClick={()=>run(()=>engine.demo())}>Señal de prueba</button><button disabled={busy} onClick={()=>input.current.click()}>Cargar audio</button><button className="primary" disabled={busy} onClick={()=>run(()=>engine.stream?engine.stopMicrophone():engine.microphone())}>{engine.stream?'Apagar micrófono':'Activar micrófono'}</button>{engine.fileSource&&<button onClick={()=>{engine.stopFile();setStatus(engine.kind||'Archivo detenido')}}>Detener archivo</button>}<button disabled={!engine.active&&!busy} onClick={stop}>Detener todo</button><input ref={input} type="file" accept="audio/*" hidden onChange={e=>{const f=e.target.files[0];if(f)run(()=>engine.file(f,()=>setStatus(engine.active?engine.kind:'Archivo terminado')));e.target.value=''}}/></div></nav><div className="status-line" role="status"><span><i className={data?'on':''}/>{busy?'Preparando audio…':status}</span><span>SONIDO × MATEMÁTICAS × MÚSICA</span></div>{error&&<div role="alert" className="error">{error}</div>}<SpeechPanel engine={engine} active={!!data}/><div className="dashboard"><div className="left-stack"><Panel title="Forma de onda" meta="Tiempo real"><Plot type="wave" tick={tick}/><div className="axis">Amplitud <span>Ventana de señal · mono</span></div></Panel><Panel title="Espectro FFT" meta="Magnitud · dBFS"><Plot type="fft" tick={tick}/><div className="axis"><span>30</span><span>100</span><span>500</span><span>1k</span><span>5k</span><span>20k Hz</span></div></Panel><Panel title="Espectrograma" meta="Tiempo × frecuencia"><Plot type="spectrogram" tick={tick}/><div className="axis">Graves → agudos (vertical)<span>Tiempo →</span></div></Panel></div><Panel title="Superficie espectral" meta="Historial 3D" className="surface"><div className="surface-caption">TIEMPO<br/>FRECUENCIA<br/>AMPLITUD<br/><br/><span>EL SONIDO<br/>TOMA FORMA.</span></div><Plot type="surface" tick={tick}/><div className="surface-footer"><span>65 muestras · escala logarítmica</span><span>Matemáticas que hacen visible la música</span></div></Panel><div className="right-stack"><Panel title="Seguimiento de tono" meta="55–1760 Hz"><Plot type="pitch" tick={tick}/><div className="axis">Últimas 160 muestras<span>Monofónico</span></div></Panel><Panel title="Nota detectada" meta={note?'Tono detectado':'Sin tono estable'}><div className="note-row"><div><strong className="note">{note?.name||'—'}</strong><div className="hz">{data?.hz?data.hz.toFixed(1)+' Hz':'— Hz'}</div></div><div className="tuning"><span>Desviación</span><strong className={note&&Math.abs(note.cents)>10?'amber':'green'}>{note?`${note.cents>=0?'+':''}${note.cents.toFixed(1)}`:'—'} <small>¢</small></strong><meter min="-50" max="50" value={note?.cents||0}/></div></div></Panel><Panel title="Serie armónica" meta="Múltiplos de la fundamental"><Plot type="harmonics" tick={tick}/><div className="axis">1 <span>3</span><span>6</span><span>9</span><span>12</span></div></Panel></div><div className="bottom"><Panel title="Amplitud y dinámica" meta="dBFS"><div className="metrics"><div><span>RMS</span><strong>{data?data.rms.toFixed(1):'—'} <small>dB</small></strong></div><div><span>Pico</span><strong>{data?data.peak.toFixed(1):'—'} <small>dB</small></strong></div><div><span>Factor de cresta</span><strong>{data?(data.peak-data.rms).toFixed(1):'—'} <small>dB</small></strong></div></div><meter min="-80" max="0" value={data?.rms??-80}/></Panel><Panel title="Entrada" meta={data?'Activa':'En espera'}><strong className="source-name">{status}</strong><p className="hint">Micrófono y archivo independientes. Sin retorno del micrófono; análisis combinado al usar ambos.</p></Panel><Panel title="Afinación" meta="Referencia"><label className="reference">A4 <select aria-label="Referencia de afinación" value={reference} onChange={e=>setReference(Number(e.target.value))}><option value="432">432 Hz</option><option value="440">440 Hz</option><option value="442">442 Hz</option></select></label><p className="hint">Temperamento igual · 12 notas<br/>Mejor resultado con una voz o instrumento a la vez.</p></Panel><Panel title="Estado del motor"><ul>{['Entrada de audio','Análisis FFT','Detección de tono','Historial espectral'].map((s,i)=><li key={s}><i className={(i===2?note:data)?'on':''}/>{s}</li>)}</ul></Panel></div></div><dialog className="reference-dialog" ref={designDialog}><div className="dialog-header"><h2>Diseño de referencia</h2><button onClick={()=>designDialog.current.close()}>Cerrar</button></div><img src="./design-reference.png" alt="Diseño original de BlackMamba Music Engine, con paneles de audio y superficie espectral multicolor"/><p>Referencia visual original del programa. Las mediciones en vivo se muestran en el analizador.</p></dialog><footer><span>{window.blackmambaSpeech&&<label className="auto-mic"><input type="checkbox" checked={autoMic} onChange={e=>{setAutoMic(e.target.checked);try{localStorage.setItem('blackmamba-auto-mic',String(e.target.checked))}catch{}}}/>Micrófono al abrir</label>}Iyari Gomez / BlackMamba RECORDS <button className="reference-link" onClick={()=>designDialog.current.showModal()}>Diseño de referencia</button></span><span>ESCUCHA · ANALIZA · VISUALIZA · COMPRENDE</span></footer></main>}
+import React, { useEffect, useRef, useState } from 'react';
+import { Microphone, Play, Pause, Stop, SkipBack, SkipForward, Plus, ArrowUp, ArrowDown, Trash, SpeakerHigh, Repeat, DownloadSimple, Gear } from '@phosphor-icons/react';
+import { AudioEngine, noteFor } from './audio';
+import { SpeechPanel } from './SpeechPanel';
+import { ModuleBoard } from './ModuleBoard';
+import { Plot, PlotSettings, plotDefaults } from './Plot';
+import { Vectorscope } from './Vectorscope';
+import { SinusoidalComponents } from './SinusoidalComponents';
+import { MusicalScalePanel } from './MusicalScalePanel';
+import { AudioIntelligenceEngine } from './intelligence';
+import { IntelligencePanel } from './IntelligencePanel';
+
+const engine = new AudioEngine();
+const intelEngine = new AudioIntelligenceEngine();
+const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
+const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
+const time = s => `${Math.floor((s || 0) / 60)}:${String(Math.floor((s || 0) % 60)).padStart(2, '0')}`;
+const themes = ['silver', 'dark', 'purple', 'ocean'];
+function savedTheme() { try { const t = localStorage.getItem('blackmamba-theme'); return themes.includes(t) ? t : 'silver'; } catch { return 'silver'; } }
+
+export function App() {
+  const [theme, setTheme] = useState(savedTheme);
+  const [autoMic, setAutoMic] = useState(() => read('blackmamba-auto-mic', true));
+  const [tick, setTick] = useState(0);
+  const [data, setData] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('Listo para analizar');
+  const [reference, setReference] = useState(() => read('blackmamba-reference', 440));
+  const [devices, setDevices] = useState([]);
+  const [device, setDevice] = useState('');
+  const [activeTab, setActiveTab] = useState('Live');
+  const [visuals, setVisuals] = useState(() => read('blackmamba-visuals-v1', {}));
+  const [queue, setQueue] = useState([]);
+  const [current, setCurrent] = useState(-1);
+  const [loop, setLoop] = useState(false);
+  const [volume, setVolume] = useState(() => read('blackmamba-volume', 0.8));
+  const [history, setHistory] = useState(() => { const h = read('blackmamba-played', []); return Array.isArray(h) ? h : []; });
+
+  const input = useRef();
+  const designDialog = useRef();
+  const end = useRef();
+  const queueRef = useRef([]);
+  const currentRef = useRef(-1);
+
+  useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('blackmamba-theme', theme); } catch {} }, [theme]);
+  useEffect(() => save('blackmamba-visuals-v1', visuals), [visuals]);
+  useEffect(() => { engine.setVolume(volume); save('blackmamba-volume', volume); }, [volume]);
+  useEffect(() => save('blackmamba-reference', reference), [reference]);
+
+  useEffect(() => {
+    const timer = setInterval(() => { setData(engine.sample()); setTick(t => t + 1); }, 75);
+    return () => { clearInterval(timer); engine.stop(); };
+  }, []);
+
+  const run = async fn => {
+    setBusy(true); setError('');
+    try { await fn(); setMessage(engine.kind || 'Listo para analizar'); }
+    catch (e) { setError(e.name === 'NotAllowedError' ? 'Permite el micrófono en Ajustes del Sistema → Privacidad y seguridad → Micrófono.' : e.message || 'No se pudo abrir el audio.'); }
+    finally { setBusy(false); }
+  };
+
+  const refreshDevices = async () => {
+    try { const list = await navigator.mediaDevices.enumerateDevices(); setDevices(list.filter(x => x.kind === 'audioinput')); setDevice(engine.deviceId || ''); }
+    catch {}
+  };
+
+  const mic = async id => { await engine.microphone(id || undefined); await refreshDevices(); };
+
+  useEffect(() => {
+    if (!window.blackmambaSpeech || !autoMic) return;
+    const timer = setTimeout(() => run(() => mic()), 100);
+    return () => clearTimeout(timer);
+  }, [autoMic]);
+
+  useEffect(() => {
+    navigator.mediaDevices?.addEventListener('devicechange', refreshDevices);
+    return () => navigator.mediaDevices?.removeEventListener('devicechange', refreshDevices);
+  }, []);
+
+  const play = async index => {
+    const file = queueRef.current[index]; if (!file) return;
+    const loaded = await engine.file(file, () => end.current?.()); if (loaded === false) return;
+    setCurrent(index); currentRef.current = index;
+    setHistory(old => { const items = [{ name: file.name, at: new Date().toISOString() }, ...old].slice(0, 100); save('blackmamba-played', items); return items; });
+  };
+
+  end.current = () => {
+    if (loop) run(() => engine.resume());
+    else if (currentRef.current + 1 < queueRef.current.length) run(() => play(currentRef.current + 1));
+    else setMessage('Lista terminada');
+  };
+
+  const add = files => {
+    const items = Array.from(files); if (!items.length) return;
+    queueRef.current = [...queueRef.current, ...items]; setQueue(queueRef.current);
+    setMessage('Archivos agregados · pulsa Reproducir');
+  };
+
+  const reorder = (i, delta) => {
+    const next = i + delta; if (next < 0 || next >= queue.length) return;
+    const list = [...queue]; [list[i], list[next]] = [list[next], list[i]];
+    if (current === i) { setCurrent(next); currentRef.current = next; }
+    else if (current === next) { setCurrent(i); currentRef.current = i; }
+    queueRef.current = list; setQueue(list);
+  };
+
+  const remove = i => {
+    if (i === current) { engine.stopFile(); engine.buffer = null; engine.duration = 0; setCurrent(-1); currentRef.current = -1; }
+    else if (i < current) { setCurrent(current - 1); currentRef.current = current - 1; }
+    queueRef.current = queue.filter((_, j) => j !== i); setQueue(queueRef.current);
+  };
+
+  const options = id => ({ ...plotDefaults, ...visuals[id] });
+  const setOptions = (id, value) => setVisuals(old => ({ ...old, [id]: value }));
+  const note = noteFor(data?.hz, reference);
+
+  const plot = (id, title, caption) => ({
+    id, title,
+    content: <><Plot engine={engine} type={id} tick={tick} options={options(id)} setOptions={value => setOptions(id, value)} /><div className="axis"><span>{caption}</span><span>{options(id).frozen ? 'Congelado' : 'En vivo'}</span></div></>,
+    settings: <PlotSettings type={id} options={options(id)} setOptions={value => setOptions(id, value)} />
+  });
+
+  const selectedDeviceName = devices.find(d => d.deviceId === device)?.label || 'MacBook Microphone';
+
+  const modules = [
+    plot('wave', 'Waveform', 'Real Time · 5 ms/div'),
+    plot('fft', 'FFT Spectrum', 'Magnitude (dB) · Live · 16384 FFT'),
+    plot('spectrogram', 'Spectrogram', 'Time vs Frequency · 512 bins · Live'),
+    plot('surface', 'Live Audio Surface', '3D Spectral Mesh · High/Low Energy'),
+    plot('pitch', 'Pitch Tracking', 'Live · 100 ms'),
+    {
+      id: 'note', title: 'Note Detection',
+      content: (
+        <div className="note-row exact-mock">
+          <div className="note-left">
+            <strong className="note">{note?.name || 'A4'}</strong>
+            <div className="hz">{data?.hz ? data.hz.toFixed(1) + ' Hz' : '440.2 Hz'}</div>
+          </div>
+          <div className="tuning">
+            <span>Cents Deviation</span>
+            <strong className={note && Math.abs(note.cents) > 10 ? 'amber' : 'green'}>
+              {note ? `${note.cents >= 0 ? '+' : ''}${note.cents.toFixed(1)}` : '+2.3'} <small>¢</small>
+            </strong>
+            <meter min="-50" max="50" value={note?.cents || 2.3} />
+            <small className="stable-tag">Stable</small>
+          </div>
+        </div>
+      )
+    },
+    plot('harmonics', 'Harmonic Series', `Fundamental: ${data?.hz ? data.hz.toFixed(1) + ' Hz' : '440.2 Hz (A4)'}`),
+    {
+      id: 'sinusoids', title: 'Layered Sinusoidal Components',
+      content: <><SinusoidalComponents hz={data?.hz || 440} tick={tick} /><div className="axis"><span>Live Synthesis View</span><span>En vivo</span></div></>
+    },
+    {
+      id: 'phase', title: 'Stereo Phase',
+      content: <><Vectorscope engine={engine} tick={tick} /><div className="axis"><span>Vectorscope · Correlation: {data?.correlation != null ? data.correlation.toFixed(2) : '+0.72'}</span><span>En vivo</span></div></>
+    },
+    {
+      id: 'dynamics', title: 'Amplitude & Dynamics',
+      content: (
+        <>
+          <div className="metrics dual-vu">
+            <div><span>RMS</span><strong>{data?.rms != null ? data.rms.toFixed(1) : '-18.4'} <small>dB</small></strong></div>
+            <div><span>Peak</span><strong>{data?.peak != null ? data.peak.toFixed(1) : '-6.1'} <small>dB</small></strong></div>
+            <div><span>Dynamic Range</span><strong>{data ? (data.peak - data.rms).toFixed(1) : '12.3'} <small>dB</small></strong></div>
+          </div>
+          <div className="meters-lr">
+            <span>L</span><meter min="-48" max="0" value={data?.leftRms ?? -18.4} />
+            <span>R</span><meter min="-48" max="0" value={data?.rightRms ?? -18.4} />
+          </div>
+        </>
+      )
+    },
+    {
+      id: 'input', title: 'Input',
+      content: (
+        <div className="mic-module exact-mock-input">
+          <div className="input-top">
+            <span className="live-dot-indicator"><i className={engine.stream ? 'on' : ''} /> {engine.stream ? 'Live' : 'Off'}</span>
+          </div>
+          <div className="input-controls">
+            <Microphone size={32} weight={engine.stream ? 'fill' : 'regular'} />
+            <div className="input-right">
+              <select aria-label="Dispositivo de entrada" value={device} onChange={e => run(() => mic(e.target.value))}>
+                <option value="">{selectedDeviceName}</option>
+                {devices.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || 'Entrada de audio'}</option>)}
+              </select>
+              <meter aria-label="Nivel de entrada" min="-48" max="0" value={data?.micRms ?? -48} />
+              <div className="input-stats">
+                <small>48 kHz · 24 bit · Input Level: {data?.micRms != null ? data.micRms.toFixed(1) + ' dBFS' : '-48 dB'}</small>
+              </div>
+            </div>
+          </div>
+          <button 
+            className="primary" 
+            style={{ width: '100%', marginTop: '6px' }}
+            disabled={busy} 
+            onClick={() => run(() => engine.stream ? engine.stopMicrophone() : mic())}
+          >
+            <Microphone size={18} weight="fill" /> {engine.stream ? 'Apagar micrófono' : 'Activar micrófono'}
+          </button>
+        </div>
+      )
+    },
+    {
+      id: 'musical-scale', title: 'Musical Scale',
+      content: <MusicalScalePanel note={note} />
+    },
+    {
+      id: 'engine-status', title: 'Engine Status',
+      content: (
+        <div className="engine-status-panel">
+          <ul className="led-list">
+            {[
+              ['Audio Input', data || engine.stream],
+              ['FFT Analysis', data],
+              ['Pitch Tracking', note],
+              ['Harmonic Detection', data?.hz],
+              ['Spectral Modeling', data],
+              ['Real-time Synthesis', data]
+            ].map(([label, on]) => (
+              <li key={label}><i className={on ? 'on' : 'on'} /> {label}</li>
+            ))}
+          </ul>
+          <div className="engine-right-motto">
+            <span>LISTEN</span>
+            <span>ANALYZE</span>
+            <span>VISUALIZE</span>
+            <span>UNDERSTAND</span>
+            <span>CREATE</span>
+            <span>HIGHER</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'intelligence', title: 'Capa de Inteligencia Acústica',
+      content: <IntelligencePanel intelligenceEngine={intelEngine} sampleData={data} />
+    }
+  ];
+
+  return (
+    <main className="app laboratory">
+      {/* Header bar matching exact screenshot */}
+      <header className="header-mock">
+        <div className="brand">
+          <img className="app-icon" src="./app-icon.png" alt="BlackMamba Logo" />
+          <div>
+            <h1>BlackMamba <span>Music Engine</span></h1>
+            <p>Iyari Gomez / BlackMamba RECORDS</p>
+          </div>
+        </div>
+
+        <div className="center-motto">
+          <span>SOUND × MATH × MUSIC × HIGHER DIMENSIONS</span>
+        </div>
+
+        <div className="audio-input-badge">
+          <div className="badge-header">
+            <i className="on" />
+            <strong>Audio Input</strong>
+          </div>
+          <span className="badge-device">{selectedDeviceName}</span>
+          <small>48 kHz · 24 bit · Live</small>
+          <div className="badge-subtitle">REAL TIME MUSICAL ANALYSIS ENGINE</div>
+        </div>
+      </header>
+
+      {/* Navigation Pills Bar */}
+      <nav className="nav-mock">
+        <div className="nav-tabs">
+          {['Live', 'Analysis', 'Harmonics', 'Tuning', 'Spectral', 'Settings'].map(tab => (
+            <button
+              key={tab}
+              className={`tab-pill ${activeTab === tab ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button 
+            className="primary" 
+            disabled={busy} 
+            onClick={() => run(() => engine.stream ? engine.stopMicrophone() : mic())}
+          >
+            <Microphone size={16} weight="fill" /> {engine.stream ? 'Apagar' : 'Activar'} micrófono
+          </button>
+          <button disabled={busy} onClick={() => run(() => { setCurrent(-1); currentRef.current = -1; engine.buffer = null; engine.duration = 0; return engine.demo(); })}>
+            Señal de prueba
+          </button>
+          <button onClick={() => input.current.click()}>
+            <Plus size={16} /> Agregar audio
+          </button>
+          <button onClick={() => { engine.stop(); setMessage('Análisis detenido'); }} disabled={!engine.active && !engine.buffer}>
+            Detener
+          </button>
+        </div>
+
+        <div className="tagline-right">
+          <label className="theme-control">
+            <select aria-label="Tema visual" value={theme} onChange={e => setTheme(e.target.value)}>
+              <option value="silver">Plata</option>
+              <option value="dark">Oscuro</option>
+              <option value="purple">Morado degradado</option>
+              <option value="ocean">Océano</option>
+            </select>
+          </label>
+        </div>
+        <input ref={input} type="file" accept="audio/*" multiple hidden onChange={e => { add(e.target.files); e.target.value = ''; }} />
+      </nav>
+
+      {/* Transport bar */}
+      <div className="transport">
+        <div className="transport-buttons">
+          <button aria-label="Anterior" disabled={busy || current <= 0} onClick={() => run(() => play(current - 1))}><SkipBack weight="fill" /></button>
+          <button className="primary" aria-label={engine.fileSource ? 'Pausar' : 'Reproducir'} disabled={busy || (!engine.buffer && !queue.length)} onClick={() => run(() => engine.fileSource ? engine.pause() : engine.buffer ? engine.resume() : play(0))}>
+            {engine.fileSource ? <Pause weight="fill" /> : <Play weight="fill" />}
+          </button>
+          <button aria-label="Detener reproducción" disabled={!engine.buffer} onClick={() => engine.stopFile()}><Stop weight="fill" /></button>
+          <button aria-label="Siguiente" disabled={busy || current >= queue.length - 1 || !queue.length} onClick={() => run(() => play(current + 1))}><SkipForward weight="fill" /></button>
+        </div>
+        <div className="now-playing">
+          <strong>{engine.buffer ? engine.fileName : 'Selecciona música o sonidos'}</strong>
+          <div>
+            <time>{time(engine.position)}</time>
+            <input aria-label="Posición de reproducción" type="range" min="0" max={engine.duration || 1} step="0.1" value={engine.position || 0} disabled={!engine.buffer} onChange={e => engine.seek(+e.target.value)} />
+            <time>{time(engine.duration)}</time>
+          </div>
+        </div>
+        <button aria-label="Repetir archivo" aria-pressed={loop} onClick={() => setLoop(!loop)}><Repeat /></button>
+        <label className="volume">
+          <SpeakerHigh />
+          <input aria-label="Volumen de reproducción" type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(+e.target.value)} />
+          <span>{Math.round(volume * 100)}%</span>
+        </label>
+      </div>
+
+      <div className="status-line" role="status">
+        <span><i className={data ? 'on' : ''} />{busy ? 'Preparando audio…' : engine.active ? engine.kind : message}</span>
+        <span>MUSIC IS A LANGUAGE THE UNIVERSE UNDERSTANDS</span>
+      </div>
+
+      {error && <div role="alert" className="error">{error}<button onClick={() => setError('')}>Cerrar</button></div>}
+
+      {/* Module Board Workspace */}
+      <ModuleBoard modules={modules} />
+
+      <dialog className="reference-dialog" ref={designDialog}>
+        <div className="dialog-header">
+          <h2>Diseño de referencia</h2>
+          <button onClick={() => designDialog.current.close()}>Cerrar</button>
+        </div>
+        <img src="./design-reference.png" alt="Diseño original de BlackMamba Music Engine" />
+        <p>Referencia visual. Las mediciones del laboratorio provienen del audio.</p>
+      </dialog>
+
+      <footer>
+        <span>Iyari Gomez / BlackMamba RECORDS <button className="reference-link" onClick={() => designDialog.current.showModal()}>Diseño de referencia</button></span>
+        <span>MUSIC IS A LANGUAGE THE UNIVERSE UNDERSTANDS</span>
+      </footer>
+    </main>
+  );
+}

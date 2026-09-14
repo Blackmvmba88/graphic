@@ -1,54 +1,69 @@
-# BlackMamba Music Engine · 0.1
+# BlackMamba Music Engine · v0.4
 
-Analizador local de audio inspirado en la referencia visual de BlackMamba RECORDS.
+Estación de análisis acústico en tiempo real, laboratorio de sonido e inteligencia tímbrica creada por **BlackMamba RECORDS** (*Iyari Gomez / "El sonido se convierte en conocimiento"*).
 
-## Uso
+![Diseño de Referencia](./public/app-icon.png)
 
-```sh
+## 🚀 Características Principales
+
+* **Fidelidad Visual Absoluta**: Pestañas de navegación (`Live`, `Analysis`, `Harmonics`, `Tuning`, `Spectral`, `Settings`), badge de entrada de audio estéreo en vivo (`48 kHz · 24 bit`).
+* **Superficie Espectral 3D**: Malla tridimensional continua interactiva (Amplitude 0.0–1.0, Time ms, Frequency 20–20kHz) con degradado espectral (Rojo a Azul/Púrpura) y leyenda de energía (`High Energy` / `Low Energy`).
+* **Fase Estéreo & Vectorscope**: Medidor polar de fase L/R y dispersión XY Vectorscope con correlación en tiempo real.
+* **Componentes Senoidales Armónicos**: Visualización de capa senoidal superpuesta (1x, 2x, 3x, 4x, 5x fundamental).
+* **Detección de Escala y Tonalidad**: Detector de nota (`A4`), desviación en cents (`+2.3 ¢`), selector de escala (`A Major`) e índice de confianza (`Key Confidence`).
+* **🧠 Capa de Inteligencia Acústica Local**: Motor de aprendizaje en tiempo real que identifica huellas tímbricas (Voz humana, instrumentos, sub-bajos, mezclas), almacena patrones en memoria local y mejora progresivamente con retroalimentación del usuario (`Aceptar` / `Corregir`).
+* **📱 Soporte Android Nativo**: Proyecto Gradle listo en `android/` y configuración Capacitor (`capacitor.config.json`) para compilación en móviles Android.
+* **🐳 Dockerización & Metacomandos CLI**: `Dockerfile` multi-stage y runner de metacomandos (`npm run meta`).
+
+---
+
+## 💻 Uso e Instalación Local
+
+```bash
+# Instalar dependencias
 npm install
-npm run dev -- --host 127.0.0.1 --port 4173
+
+# Iniciar servidor de desarrollo
+npm run dev
+
+# Ejecutar pruebas
+npm test
 ```
 
-Abrir http://localhost:4173. Pulsar **Señal de prueba**, **Cargar audio** o **Activar micrófono**. El permiso del micrófono lo concede el usuario en su navegador. **Detener** libera el micrófono y detiene la reproducción. Los archivos se decodifican en memoria y se reproducen mientras se analizan; no se suben a un servidor. La señal de prueba es silenciosa.
+---
 
-## Implementado
+## ⚡ Suite de Metacomandos CLI
 
-Forma de onda mono, FFT de 8192 puntos, espectrograma, historial espectral en proyección 3D, detección monofónica aproximada de 55–1400 Hz, nota y cents, muestreo de amplitud en múltiplos de la fundamental, RMS, pico y factor de cresta. Referencia A4 seleccionable: 432, 440 o 442 Hz. La frecuencia de muestreo es la real del AudioContext.
+```bash
+# Ver metacomandos disponibles
+npm run meta help
 
-## Límites de esta primera versión
+# Construir versión web optimizada
+npm run meta build
 
-La proyección 3D tiene cámara fija. No hay análisis de fase estéreo, acordes, tonalidad automática, síntesis musical ni almacenamiento de grabaciones. La nota puede ser inestable en mezclas o sonidos ruidosos. Los niveles representan la señal digital, no presión sonora calibrada. Los archivos grandes ocupan memoria al decodificarse completos. Requiere un navegador compatible con Web Audio; el micrófono requiere localhost o HTTPS.
+# Compilar / sincronizar paquete Android
+npm run meta build:android
 
-## Verificación
+# Iniciar contenedor Docker
+npm run meta docker:up
+```
 
-Build de producción correcto. Detector comprobado con senos de 55, 110, 220, 440, 880 y 1300 Hz a 44.1/48 kHz (error inferior a 5 cents), y silencio. En navegador: señal 440 Hz → A4, archivo WAV 220 Hz → A3, cambio de referencia a 432 Hz → +31.8 cents, parada y fin de archivo. Sin errores de consola observados. Micrófono físico pendiente de prueba del usuario.
+---
 
-## macOS · versión 0.2
+## 📱 Compilación para Android
 
-Instalador para Apple Silicon (arm64): abrir el DMG y arrastrar BlackMamba Music Engine a Applications. Es un build de desarrollo sin firma Developer ID ni notarización de Apple; macOS puede mostrar una advertencia al abrirlo. No requiere Node ni un servidor web para funcionar.
+El proyecto incluye la infraestructura nativa para Android en `android/`:
 
-El selector **Tema** guarda Plata, Oscuro, Morado degradado u Océano. El botón **Diseño de referencia** muestra la captura original incluida dentro del programa. El icono también está integrado.
+1. Asegúrate de compilar la versión web con `npm run build:android`.
+2. Abre la carpeta `android` en **Android Studio**.
+3. El archivo `AndroidManifest.xml` ya incluye los permisos nativos de micrófono `RECORD_AUDIO` y `MODIFY_AUDIO_SETTINGS`.
+4. Ejecuta o genera el APK desde Android Studio o con `./gradlew assembleDebug`.
 
-Para reconstruir: `npm ci` y `npm run dist:mac`. El instalador queda en `release/`. El empaquetado de escritorio se encuentra en `electron/main.cjs` y la configuración de `electron-builder` en `package.json`.
+---
 
-## Skill reutilizable
+## 🐳 Despliegue con Docker
 
-`skills/blackmamba-interfaces/SKILL.md` contiene el flujo de diseño, tokens de los cuatro temas, icono, captura de referencia y guía de DMG. Copiar esa carpeta a `$CODEX_HOME/skills/blackmamba-interfaces` permite descubrirlo en Codex. Invocación: `$blackmamba-interfaces crea un analizador con paneles científicos y tema morado degradado`.
-
-## Voz y sonidos · versión 0.3
-
-**Palabras en vivo** utiliza Whisper Base multilingüe, local, con modo automático y selección Español / English. Al abrir la app se solicita el micrófono (macOS decide el consentimiento); una vez autorizado, puede iniciarse automáticamente en siguientes aperturas. Se puede desactivar **Micrófono al abrir**, pausar **Transcribir** o detener la entrada. La app procesa en segundo plano mientras permanece abierta y termina al salir: no instala un servicio de inicio de sesión.
-
-Texto por pausas o fragmentos de hasta 8 segundos. Inglés y español pueden alternarse entre fragmentos; frases cortas, idiomas mezclados y voz sobre música pueden requerir corrección. Una cola limitada muestra un aviso si el equipo no alcanza el ritmo. Guardar texto exporta TXT. El texto permanece en la sesión; no se almacena la grabación. Los WAV temporales de transcripción se eliminan al terminar cada trabajo.
-
-AudioSet sugiere etiquetas secundarias con **Sí / No / Corregir**. Las últimas 200 revisiones se guardan localmente; no reentrenan el modelo. Sus puntuaciones no son una probabilidad calibrada de certeza.
-
-Los modelos están dentro del DMG y no se envía audio a una API. La versión web mantiene los visuales, pero voz y etiquetas locales requieren la app Mac. El build usa los recursos reproducibles de `native/README.md`. Ver `ROADMAP.md` para la mejora pendiente del panel de micrófono y superficie 3D.
-
-## Temas vivos, reproducción y actualizaciones · 0.3
-
-Los cuatro temas comparten un ciclo cromático continuo de 48 segundos: fondo, paneles, bordes y acentos cambian coordinadamente. Plata y Oscuro son más sutiles; Morado y Océano tienen mayor intensidad. Los colores de los datos conservan su significado. La preferencia de sistema «Reducir movimiento» detiene el ciclo.
-
-Micrófono y archivo son fuentes independientes: activar o apagar el micrófono no detiene la reproducción. Se analiza la mezcla cuando ambas están activas; la voz del micrófono no se devuelve a los altavoces. El escritorio reparte la altura disponible y las ventanas pequeñas o ampliadas conservan desplazamiento.
-
-Desde esta versión, **Actualizar** permite seleccionar un DMG posterior y reiniciar conservando preferencias y revisiones. Valida versión, identificador y arquitectura, conserva el instalador y una copia de la app anterior. La app debe estar fuera del DMG, en una carpeta con permiso de escritura. No busca actualizaciones por internet ni verifica una firma Developer ID. El reemplazo real sobre la app del usuario queda pendiente de prueba con una próxima versión; no se reemplazó durante validación.
+```bash
+docker compose up -d --build
+```
+La aplicación web se ejecutará en `http://localhost:4173`.

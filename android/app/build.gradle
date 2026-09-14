@@ -1,0 +1,26 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.blackmambarecords.musicengine"
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.blackmambarecords.musicengine"
+        minSdkVersion 23
+        targetSdkVersion 34
+        versionCode 4
+        versionName "0.4.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+}

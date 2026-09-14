@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  blackmamba-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: blackmamba_music_engine
+    ports:
+      - "4173:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

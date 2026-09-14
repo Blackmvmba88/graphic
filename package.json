@@ -1,6 +1,6 @@
 {
   "name": "blackmamba-engine",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,11 +8,16 @@
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "meta": "node scripts/metacmd.mjs",
+    "build:android": "node scripts/metacmd.mjs build:android",
+    "docker:up": "node scripts/metacmd.mjs docker:up",
     "desktop": "npm run build && electron .",
     "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --publish never"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@vitejs/plugin-react": "5.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -22,7 +27,7 @@
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3"
   },
-  "description": "BlackMamba Music Engine \u00b7 analizador de audio",
+  "description": "BlackMamba Music Engine · analizador de audio",
   "author": "BlackMamba RECORDS",
   "main": "electron/main.cjs",
   "build": {
@@ -50,7 +55,7 @@
       "icon": "build/icon.icns",
       "identity": null,
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "BlackMamba escucha el micr\u00f3fono para mostrar visuales, transcribir voz en espa\u00f1ol e ingl\u00e9s y sugerir etiquetas de sonidos, todo en este Mac."
+        "NSMicrophoneUsageDescription": "BlackMamba escucha el micrófono para mostrar visuales, transcribir voz en español e inglés y sugerir etiquetas de sonidos, todo en este Mac."
       }
     },
     "dmg": {

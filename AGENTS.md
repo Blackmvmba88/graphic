@@ -15,3 +15,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Prioridad actual: detectar y escribir palabras en inglés y español. La mejora de fidelidad visual con micrófono activo está pendiente en ROADMAP.md (panel de entrada y superficie espectral); no declararla terminada con la vista actual.
 - Pantalla completa: repartir espacio para ver diseño completo a zoom normal. Conservar zoom nativo ⌘ + / ⌘ −; usar desplazamiento en vistas pequeñas o ampliadas en lugar de ocultar controles.
 - Los temas deben tener un degradado vivo con un ciclo de color compartido por fondo, paneles y acentos. Mantener contraste, respetar reducir movimiento y no alterar la semántica cromática de los datos.
+- Laboratorio modular: paneles movibles, redimensionables, ocultables y ampliables, con distribución persistente. Cámara 3D, grosor y color configurables; transporte y lista de archivos reales. Mantener el análisis como fundamento previo a creación musical.
