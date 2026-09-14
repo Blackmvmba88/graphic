@@ -16,3 +16,4 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Pantalla completa: repartir espacio para ver diseño completo a zoom normal. Conservar zoom nativo ⌘ + / ⌘ −; usar desplazamiento en vistas pequeñas o ampliadas en lugar de ocultar controles.
 - Los temas deben tener un degradado vivo con un ciclo de color compartido por fondo, paneles y acentos. Mantener contraste, respetar reducir movimiento y no alterar la semántica cromática de los datos.
 - Laboratorio modular: paneles movibles, redimensionables, ocultables y ampliables, con distribución persistente. Cámara 3D, grosor y color configurables; transporte y lista de archivos reales. Mantener el análisis como fundamento previo a creación musical.
+- Snapshot guardado y preservado en Git: Etiqueta `v0.4.0`, tag de UI `v0.2-ui-snapshot` y rama de respaldo `backup/v0.2-music-engine`. Captura de referencia guardada en `docs/snapshots/v0.2-ui-reference.png`.
