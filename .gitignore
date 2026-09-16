@@ -10,3 +10,5 @@ work/
 native/whisper/whisper-cli
 native/whisper/*.bin
 native/audioset/onnx/
+.codesight/
+

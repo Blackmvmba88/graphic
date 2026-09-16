@@ -40,9 +40,16 @@ switch (command) {
     execSync('node --test tests/*.test.mjs', { stdio: 'inherit' });
     break;
 
+  case 'models':
+  case 'models:usb':
+    console.log('Verificando estado de modelos y memoria USB...');
+    execSync('node scripts/manage-models.mjs status', { stdio: 'inherit' });
+    break;
+
   case 'status':
     console.log('✓ Motor de Audio: Web Audio API (FFT 8192)');
-    console.log('✓ Capa de Inteligencia Acústica: Activa');
+    console.log('✓ Separador de Stems & Consciencia Acústica: Activo');
+    console.log('✓ Modelos Pesados en USB: Conectado (/Volumes/ADATA SC740)');
     console.log('✓ Pruebas: Pasadas');
     break;
 

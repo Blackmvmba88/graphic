@@ -9,7 +9,7 @@
 
 import { pitch, noteFor } from './audio';
 import { translateText } from './liveSpeech';
-import { separateStems } from './stemSeparator';
+import { separateStems } from './stemSeparator.js';
 
 const SCAN_CACHE = new Map();
 

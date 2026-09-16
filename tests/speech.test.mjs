@@ -24,3 +24,59 @@ test('translateText converts known phrases between Spanish and English',()=>{
   assert.equal(translateText('sound becomes knowledge'), 'El sonido se convierte en conocimiento');
   assert.equal(translateText('la musica es vida'), 'The music is life');
 });
+
+import {separateStems, getConsciousnessAtTime} from '../src/stemSeparator.js';
+test('separateStems separates audio into vocals, instrumental and generates consciousness map', async () => {
+  const sampleRate = 16000;
+  const length = 16000 * 3; // 3 seconds
+  const mockAudioBuffer = {
+    length,
+    sampleRate,
+    numberOfChannels: 2,
+    duration: 3.0,
+    getChannelData: (ch) => new Float32Array(length).fill(ch === 0 ? 0.05 : 0.05)
+  };
+  const mockCtx = {
+    createBuffer: (channels, len, rate) => ({
+      length: len,
+      sampleRate: rate,
+      numberOfChannels: channels,
+      getChannelData: () => new Float32Array(len)
+    })
+  };
+
+  const result = await separateStems(mockAudioBuffer, mockCtx);
+  assert.ok(result);
+  assert.ok(result.vocals);
+  assert.ok(result.instrumental);
+  assert.ok(result.vocalWav);
+  assert.ok(result.consciousnessMap);
+  assert.ok(Array.isArray(result.consciousnessMap.sections));
+});
+
+test('getConsciousnessAtTime provides active section and countdown to next vocal', () => {
+  const map = {
+    sections: [
+      { type: 'intro', start: 0, end: 5.0, duration: 5.0, label: 'Introducción Musical' },
+      { type: 'vocal', start: 5.0, end: 15.0, duration: 10.0, label: 'Estrofa 1' },
+      { type: 'instrumental', start: 15.0, end: 20.0, duration: 5.0, label: 'Solo Instrumental' },
+      { type: 'vocal', start: 20.0, end: 30.0, duration: 10.0, label: 'Estrofa 2' }
+    ]
+  };
+
+  const atIntro = getConsciousnessAtTime(map, 2.0);
+  assert.equal(atIntro.type, 'intro');
+  assert.equal(atIntro.countdownToVocal, 3);
+  assert.equal(atIntro.hint, '🎤 ¡Voz entra en 3s!');
+
+  const atVocal = getConsciousnessAtTime(map, 8.0);
+  assert.equal(atVocal.type, 'vocal');
+  assert.equal(atVocal.isVocal, true);
+  assert.equal(atVocal.countdownToVocal, 0);
+
+  const atSolo = getConsciousnessAtTime(map, 16.0);
+  assert.equal(atSolo.type, 'instrumental');
+  assert.equal(atSolo.countdownToVocal, 4);
+  assert.equal(atSolo.hint, '🎤 ¡Voz entra en 4s!');
+});
+

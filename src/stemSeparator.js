@@ -5,7 +5,7 @@
  * acústica temporal (detección de secciones, momentos de voz, solos instrumentales y cuentas regresivas).
  */
 
-import { encodeWav } from './speech';
+import { encodeWav } from './speech.js';
 
 /**
  * Filtro biquad IIR pasa-banda para aislar formantes vocales (120 Hz - 3800 Hz)
